@@ -50,3 +50,19 @@ export class Canvas {
     }
   }
 }
+
+/**
+ * leftEyeToNose: {angle: -53.3, distance: 48.663313803221186}
+noseToForehead: {angle: 82.7, distance: 39.574244103433216}
+noseToLeftEye: {angle: -53.3, distance: 48.663313803221186}
+noseToRightEye: {angle: 45.2, distance: 55.619657265233855}
+rightEyeToNose: {angle: 45.2, distance: 55.619657265233855}
+ */
+
+/**
+ * leftEyeToNose: {angle: 66.7, distance: 34.819368106304665}
+noseToForehead: {angle: 42.8, distance: 47.00668655784177}
+noseToLeftEye: {angle: 66.7, distance: 34.819368106304665}
+noseToRightEye: {angle: 30, distance: 63.76983614079411}
+rightEyeToNose: {angle: 30, distance: 63.76983614079411}
+ */

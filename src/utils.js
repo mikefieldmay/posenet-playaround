@@ -6,3 +6,12 @@ export const getDistance = (point1, point2) => {
         (point1.position.y - point2.position.y)
   );
 };
+
+export const getPointWithLeastDifference = (
+  pointADifference,
+  pointBDifference
+) => {
+  return Math.abs(pointADifference) < Math.abs(pointBDifference)
+    ? pointADifference
+    : pointBDifference;
+};

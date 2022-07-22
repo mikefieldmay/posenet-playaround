@@ -10,6 +10,8 @@ import {
 } from "./math/helpers";
 import { Canvas } from "./canvas";
 
+import { getPointWithLeastDifference } from "./utils";
+
 const params = {
   width: 300,
   height: 250
@@ -24,6 +26,8 @@ const faceBase = {
   leftEyeToRightEye: null
 };
 
+let monkeyEnabled = true;
+
 let threeRenderer;
 
 let context;
@@ -35,7 +39,7 @@ const minConfidence = 0.5;
 const setup = async (video) => {
   const posenet = new Posenet();
   await posenet.setup(video);
-  canvas = new Canvas(600, 500);
+  video.play();
 };
 
 const doYourThing = async (video) => {
@@ -49,6 +53,8 @@ const doYourThing = async (video) => {
   }
   const leftEye = keypoints.find((point) => point.part === "leftEye");
   const rightEye = keypoints.find((point) => point.part === "rightEye");
+  const rightEar = keypoints.find((point) => point.part === "rightEar");
+  const leftEar = keypoints.find((point) => point.part === "leftEar");
 
   const noseToRightEye = {
     ...getCartesianOfPoints(nose.position, rightEye.position)
@@ -58,12 +64,22 @@ const doYourThing = async (video) => {
     ...getCartesianOfPoints(nose.position, leftEye.position)
   };
 
-  const noseToForehead = {
+  const noseToEyeLine = {
     ...getCartesianOfPoints(nose.position, {
-      x: (leftEye.position.x + rightEye.position.x) / 2,
+      x: nose.position.x,
       y: (leftEye.position.y + rightEye.position.y) / 2
     })
   };
+
+  const noseToRightEar = {
+    ...getCartesianOfPoints(nose.position, rightEar.position)
+  };
+
+  const noseToLeftEar = {
+    ...getCartesianOfPoints(nose.position, leftEar.position)
+  };
+
+  // throw new Error();
 
   if (!faceBase.defaultNoseToLeftEye) {
     faceBase.defaultNoseToLeftEye = {
@@ -72,14 +88,25 @@ const doYourThing = async (video) => {
     faceBase.defaultNoseToRightEye = {
       ...noseToRightEye
     };
-    faceBase.defaultNoseToForehead = {
-      ...noseToForehead
+    faceBase.defaultnoseToEyeLine = {
+      ...noseToEyeLine
+    };
+    faceBase.defaultNoseToRightEar = {
+      ...noseToRightEar
+    };
+    faceBase.defaultNoseToLeftEar = {
+      ...noseToLeftEar
     };
   }
 
-  const { defaultNoseToLeftEye, defaultNoseToRightEye, defaultNoseToForehead } =
-    faceBase;
-  const tiltAngle = noseToForehead.angle - defaultNoseToForehead.angle;
+  const {
+    defaultNoseToLeftEye,
+    defaultNoseToRightEye,
+    defaultnoseToEyeLine,
+    defaultNoseToLeftEar,
+    defaultNoseToRightEar
+  } = faceBase;
+  const tiltAngle = noseToEyeLine.angle - defaultnoseToEyeLine.angle;
 
   let updateObj = {};
   // LEFT
@@ -88,7 +115,6 @@ const doYourThing = async (video) => {
     defaultNoseToRightEye.angle > noseToRightEye.angle
   ) {
     updateObj.y = defaultNoseToLeftEye.angle - noseToLeftEye.angle;
-    // y: defaultNoseToLeftEye.angle - noseToLeftEye.angle
   }
 
   // RIGHT
@@ -98,17 +124,29 @@ const doYourThing = async (video) => {
     defaultNoseToRightEye.angle < noseToRightEye.angle
   ) {
     updateObj.y = defaultNoseToRightEye.angle - noseToRightEye.angle;
-
-    // y: defaultNoseToRightEye.angle - noseToRightEye.angle
   }
-  // console.log(
-  //   "WHAT IS THIS",
-  //   noseToForehead.angle - defaultNoseToForehead.angle
-  // );
-  // if (tiltAngle < 100 && tiltAngle > -100) {
-  updateObj.x = defaultNoseToForehead.angle - noseToForehead.angle;
-  // }
-  threeRenderer.update(updateObj);
+
+  // HEAD TILT
+  if (rightEar && leftEar) {
+    // need to get the value that is least different because ear position jumps as head tilts
+    const angle = getPointWithLeastDifference(
+      defaultNoseToRightEar.angle - noseToRightEar.angle,
+      defaultNoseToLeftEar.angle - noseToLeftEar.angle
+    );
+
+    updateObj.x = angle;
+  } else if (leftEar) {
+    updateObj.x = defaultNoseToLeftEar.angle - noseToLeftEar.angle;
+  } else {
+    updateObj.x = defaultNoseToRightEar.angle - noseToRightEar.angle;
+  }
+
+  if (monkeyEnabled) {
+    threeRenderer.update(updateObj);
+  } else {
+    canvas.drawVideo(video);
+    canvas.drawKeypoints(keypoints);
+  }
 };
 
 const app = async () => {
@@ -116,14 +154,21 @@ const app = async () => {
   video.crossOrigin = "anonymous";
   video.width = params.width;
   video.height = params.height;
+  video.src = "/moving.mov";
+  video.loop = true;
+  video.muted = true;
 
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
+  // const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+  // video.srcObject = stream;
   video.onloadedmetadata = async () => {
-    video.play();
+    // video.play();
 
     document.body.appendChild(video);
-    threeRenderer = new ThreeJS();
+    if (monkeyEnabled) {
+      threeRenderer = new ThreeJS();
+    } else {
+      canvas = new Canvas(600, 500);
+    }
 
     await setup(video);
 

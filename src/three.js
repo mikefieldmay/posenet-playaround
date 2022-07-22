@@ -54,27 +54,27 @@ export class ThreeJS {
   loadModel() {}
 
   update(angles) {
-    console.log(angles.x);
-    if (this.model) {
-      if (angles.x) {
-        // this.model.rotation.x = angles.x * (Math.PI / 180);
-      }
-      if (angles.y) {
-        this.model.rotation.y = angles.y * (Math.PI / 180);
-      }
-      // console.log(angleInRadians);
-      // console.log(this.model.rotation);
-      // new TWEEN.Tween(this.model.rotation)
-      //   .to(
-      //     {
-      //       _y: angleInRadians
-      //     },
-      //     100
-      //   )
-      //   .start();
-      // console.log("time", this.clock.getElapsedTime());
-      // TWEEN.update();
-    }
+    // if (this.model) {
+    //   if (angles.x) {
+    //     this.model.rotation.x = angles.x * (Math.PI / 180);
+    //   }
+    //   if (angles.y) {
+    //     this.model.rotation.y = angles.y * (Math.PI / 180);
+    //   }
+    // console.log(angleInRadians);
+    // console.log(this.model.rotation);
+    new TWEEN.Tween(this.model.rotation)
+      .to(
+        {
+          x: angles.x ? angles.x * (Math.PI / 180) : 0,
+          y: angles.y ? angles.y * (Math.PI / 180) : 0
+        },
+        0.5
+      )
+      .start();
+
+    TWEEN.update();
+    // console.log("time", this.clock.getElapsedTime());
 
     this.renderer.render(this.scene, this.camera);
   }
